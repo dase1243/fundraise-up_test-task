@@ -1,37 +1,50 @@
-import {MongoClient, Db, Collection} from 'mongodb';
-import {faker} from '@faker-js/faker';
+import {MongoClient, Db, Collection, InsertManyResult} from 'mongodb';
+import { faker } from '@faker-js/faker';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const DB_URI = process.env.DB_URI || "";
-
-const DB_NAME = 'ecommerce-store';
-
-const DB_COLLECTION_CUSTOMERS = 'customers';
-
-const intervalMilliseconds = 200;
+const DB_URI: string = process.env.DB_URI || '';
+const DB_NAME: string = 'ecommerce-store';
+const DB_COLLECTION_CUSTOMERS: string = 'customers';
+const INTERVAL_MILLISECONDS: number = 200;
 
 async function connectToMongo(): Promise<Db> {
-    const client = new MongoClient(DB_URI);
+    const client: MongoClient = new MongoClient(DB_URI);
 
     try {
         await client.connect();
         console.log('Connected to MongoDB');
 
-        const db = client.db(DB_NAME);
-        return db;
-    } catch (error) {
+        return client.db(DB_NAME);
+    } catch (error: any) {
         console.error('Error connecting to MongoDB:', error);
         throw error;
     }
 }
 
-function generateRandomCustomer(): any {
-    const firstName = faker.person.firstName();
-    const lastName = faker.person.lastName();
-    const email = faker.internet.email();
-    const address = {
+interface Address {
+    line1: string;
+    line2: string;
+    postcode: string;
+    city: string;
+    state: string;
+    country: string;
+}
+
+interface Customer {
+    firstName: string;
+    lastName: string;
+    email: string;
+    address: Address;
+    createdAt: Date;
+}
+
+function generateRandomCustomer(): Customer {
+    const firstName: string = faker.person.firstName();
+    const lastName: string = faker.person.lastName();
+    const email: string = faker.internet.email();
+    const address: Address = {
         line1: faker.location.streetAddress(),
         line2: faker.location.secondaryAddress(),
         postcode: faker.location.zipCode(),
@@ -39,7 +52,7 @@ function generateRandomCustomer(): any {
         state: faker.location.state(),
         country: faker.location.country(),
     };
-    const createdAt = new Date();
+    const createdAt: Date = new Date();
 
     return {
         firstName,
@@ -51,24 +64,24 @@ function generateRandomCustomer(): any {
 }
 
 async function insertCustomerBatch(db: Db): Promise<void> {
-    const collection = db.collection(DB_COLLECTION_CUSTOMERS);
+    const collection: Collection<Customer> = db.collection(DB_COLLECTION_CUSTOMERS);
     const batchSize: number = Math.floor(Math.random() * 10) + 1;
 
-    const customers = Array.from({length: batchSize}, () => generateRandomCustomer());
+    const customers: Customer[] = Array.from({ length: batchSize }, generateRandomCustomer);
 
-    await collection.insertMany(customers);
+    const result: InsertManyResult<Customer> = await collection.insertMany(customers);
 
-    console.log(`Inserted ${batchSize} customers`);
+    console.log(`Inserted ${result.insertedCount} customers`);
 }
 
 async function startGenerating(): Promise<void> {
-    const db = await connectToMongo();
+    const db: Db = await connectToMongo();
     setInterval(async () => {
         await insertCustomerBatch(db);
-    }, intervalMilliseconds);
+    }, INTERVAL_MILLISECONDS);
 }
 
-startGenerating().catch((error) => {
+startGenerating().catch((error: any) => {
     console.error('Error running sync script:', error);
     process.exit(1);
 });
