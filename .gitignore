@@ -8,7 +8,7 @@ out/
 
 # Ignore environment files
 .env
-.env.*
+#.env.*
 
 # Ignore logs
 logs/
