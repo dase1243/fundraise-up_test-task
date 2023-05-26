@@ -2,11 +2,11 @@
   "name": "fundraise-up",
   "version": "1.0.0",
   "description": "",
-  "main": "app.ts",
+  "main": "src/app.ts",
   "scripts": {
-    "start": "ts-node app.ts",
-    "sync": "ts-node sync.ts",
-    "reindex-sync": "ts-node sync.ts --full-reindex",
+    "start": "ts-node src/app.ts",
+    "sync": "ts-node src/sync.ts",
+    "reindex-sync": "ts-node src/sync.ts --full-reindex",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Andrei Glushko",
