@@ -1,6 +1,5 @@
-import {MongoClient, Db, Collection, InsertManyResult} from 'mongodb';
+import {Db, Collection, InsertManyResult} from 'mongodb';
 import { faker } from '@faker-js/faker';
-import dotenv from 'dotenv';
 import {Address, Customer} from "./interfaces";
 import {connectToMongo, DB_COLLECTION_CUSTOMERS} from "./database";
 

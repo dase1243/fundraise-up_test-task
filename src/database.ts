@@ -24,8 +24,10 @@ async function connectToMongo(): Promise<Db> {
 }
 
 async function updateSyncState(stateCollection: Collection<any>, timestamp: Date) {
-    // check if the sync is running along and there are more documents to sync
-    // if yes, we don't need to update the state, otherwise, we have to
+    // we want to make sure that any of our sync operations are timestamped in state, so we don't duplicate anonimisation
+    // we check if the sync is running along and there are more documents to sync, then we don't need to update sync state
+    // otherwise we break the sync, as other customers were created and more recent createdAt is stored in sync state
+    // otherwise, we update sync state as we performed sync operations
     const newTimestamp: Date = new Date();
     const checkNewState: any = await stateCollection.findOne({});
 

@@ -56,7 +56,7 @@ function anonymizeCustomer(customer: Customer): Customer {
 
 async function anonymizeCursorCustomers(cursor: FindCursor<WithId<Customer>>, anonymizedCollection: Collection<Customer>) {
     let anonymizedCustomer: Customer;
-    let insertedResult: InsertOneResult<any>;
+    let insertedResult: InsertOneResult<Customer>;
     while (await cursor.hasNext()) {
         anonymizedCustomer = anonymizeCustomer(await cursor.next() as Customer);
         insertedResult = await anonymizedCollection.insertOne(anonymizedCustomer);
@@ -65,6 +65,7 @@ async function anonymizeCursorCustomers(cursor: FindCursor<WithId<Customer>>, an
 }
 
 async function findAndAnonymize(timestamp: Date, customersCollection: Collection<Customer>, anonymizedCollection: Collection<Customer>, stateCollection: Collection<any>) {
+    // we filter customers between 1970-01-01 and now
     let filter = {
         createdAt: {
             $gte: timestamp,
@@ -73,6 +74,7 @@ async function findAndAnonymize(timestamp: Date, customersCollection: Collection
     };
     const cursor = customersCollection.find(filter);
 
+    // going through each customer and anonymising it
     await anonymizeCursorCustomers(cursor, anonymizedCollection);
 
     await cursor.close();
@@ -90,13 +92,16 @@ async function runSyncScript(db: Db): Promise<void> {
 
     console.log('Collection connections are opened');
 
+    // if full reindex flag is used
     if (process.argv.includes(FULL_REINDEX_FLAG)) {
         console.log('Starting full reindex');
 
         const timestamp: Date = new Date('1970-01-01');
 
-        await anonymizedCollection.deleteMany({}); // Clear target collection
+        // Clear customers_anonymised collection
+        await anonymizedCollection.deleteMany({});
 
+        // re-anonimyse customers
         await findAndAnonymize(timestamp, customersCollection, anonymizedCollection, stateCollection);
 
         process.exit(0); // Exit after full reindex
